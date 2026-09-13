@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101e26" />
+    <title>UTAR Kampar · Campus Atlas</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; overflow: hidden; background: #101e26; color: #edf2ef; font-family: system-ui, -apple-system, sans-serif; }
+      canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+      #map { position: fixed; inset: 0; }
+      #map-labels { position: absolute; inset: 0; pointer-events: none; }
+      .building-label { max-width: 180px; padding: 5px 9px; border: 1px solid #ffffff25; border-radius: 6px; background: #12232be8; color: #edf2ef; font-size: 11px; line-height: 1.35; text-align: center; box-shadow: 0 3px 12px #0003; pointer-events: none; user-select: none; overflow-wrap: anywhere; }
+      .building-label.is-origin { border-color: #56f1d2; color: #91f5e0; }
+      .building-label.is-destination { border-color: #ffc17c; color: #ffcf96; }
+      #label-summary { color: #9aafb6; font-size: 11px; line-height: 1.5; margin: 14px 0 0; }
+      .panel { background: #12232be8; border: 1px solid #ffffff18; backdrop-filter: blur(14px); box-shadow: 0 12px 40px #0002; }
+      header { position: absolute; top: 28px; left: 28px; width: 320px; padding: 24px; border-radius: 18px; pointer-events: none; }
+      .eyebrow { color: #73daca; font-size: 10px; font-weight: 700; letter-spacing: 2.2px; text-transform: uppercase; }
+      h1 { font-size: 29px; letter-spacing: -1px; margin: 9px 0 4px; font-weight: 650; }
+      .subtitle { color: #9aafb6; font-size: 13px; margin: 0; }
+      .divider { height: 1px; background: #ffffff15; margin: 20px 0; }
+      .stats { display: flex; gap: 30px; }
+      .stat strong { display: block; font-size: 25px; font-weight: 550; font-variant-numeric: tabular-nums; }
+      .stat span { color: #9aafb6; font-size: 11px; }
+      #data-note { font-size: 11px; line-height: 1.6; color: #9aafb6; margin: 17px 0 0; }
+      #component-summary { color: #9aafb6; font-size: 11px; line-height: 1.6; margin: 12px 0 8px; }
+      #graph-check { color: #73daca; font-size: 10px; line-height: 1.5; }
+      #graph-check.blocked { color: #ffbc85; }
+      .graph-stats { margin-top: 12px; }
+      #status { position: absolute; right: 28px; top: 28px; padding: 11px 16px; border-radius: 30px; font-size: 11px; letter-spacing: .3px; }
+      #status::before { content: ''; display: inline-block; width: 6px; height: 6px; background: #73daca; border-radius: 50%; margin-right: 8px; }
+      .toolbar { position: absolute; bottom: 55px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 22px; padding: 12px 14px 12px 22px; border-radius: 14px; white-space: nowrap; }
+      .help { color: #9aafb6; font-size: 11px; }
+      .help b { color: #dae5e6; font-weight: 500; }
+      button { border: 1px solid #73daca40; background: #73daca15; color: #91e8d9; padding: 10px 14px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 11px; }
+      button:hover { background: #73daca30; }
+      button:disabled { opacity: .4; cursor: default; }
+      button:focus-visible { outline: 2px solid #73daca; outline-offset: 3px; }
+      footer { position: absolute; bottom: 17px; left: 28px; right: 28px; display: flex; justify-content: space-between; color: #90a5ad; font-size: 10px; }
+      footer a { color: inherit; }
+      #error { position: absolute; top: 40%; left: 10%; right: 10%; padding: 24px; border-radius: 14px; text-align: center; }
+      #wayfinding { position: absolute; top: 85px; right: 28px; width: 300px; padding: 22px; border-radius: 18px; }
+      .route-stop { margin-top: 18px; font-size: 12px; }
+      .route-stop span { display: block; color: #73daca; font-size: 10px; letter-spacing: 1px; margin-bottom: 5px; }
+      .route-stop.destination span { color: #ffc17c; }
+      .route-stop strong { font-weight: 500; overflow-wrap: anywhere; }
+      #route-distance { font-size: 30px; font-weight: 550; margin: 18px 0 0; font-variant-numeric: tabular-nums; }
+      .distance-caption { font-size: 10px; color: #9aafb6; }
+      #route-message, #snap-note { font-size: 11px; line-height: 1.6; color: #b4c7cd; }
+      #snap-note { color: #9aafb6; font-size: 10px; }
+      #snap-note:empty { display: none; }
+      #model-review { position: absolute; top: 28px; left: 28px; width: 290px; padding: 24px; border-radius: 18px; max-height: calc(100dvh - 160px); overflow-y: auto; }
+      .review-heading { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+      #model-review h2 { margin: 0; flex: 1; font-size: 26px; letter-spacing: -.9px; font-weight: 600; }
+      #toggle-review { flex-shrink: 0; padding: 7px; font-size: 10px; }
+      #model-review p { color: #b2c5ca; font-size: 12px; line-height: 1.6; }
+      #model-review .review-note { font-size: 11px; color: #9aafb6; }
+      .view-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 18px 0 12px; }
+      button[aria-pressed="true"] { background: #73daca35; border-color: #73daca; }
+      #model-review a { color: #91e8d9; font-size: 11px; }
+      .preview-links { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+      #model-load-state { font-size: 10px; color: #9aafb6; margin-top: 18px; }
+      body.inspecting > header, body.inspecting #wayfinding, body.inspecting #inspect-heritage { display: none; }
+      body:not(.inspecting) #campus-overview { display: none; }
+      #model-review[hidden] { display: none; }
+      @media (max-height: 650px) and (min-width: 641px) {
+        header, #wayfinding, #model-review { max-height: calc(100vh - 160px); overflow-y: auto; pointer-events: auto; }
+      }
+      @media (max-width: 640px) {
+        header { top: 16px; left: 16px; width: 220px; padding: 16px; }
+        header > .stats, header > .divider, header > #data-note, header > #component-summary, header > #graph-check, header > .eyebrow:not(:first-child) { display: none; }
+        header .subtitle { font-size: 11px; }
+        #wayfinding { top: auto; bottom: 110px; right: 16px; width: 240px; padding: 16px; max-height: 42vh; overflow-y: auto; }
+        #wayfinding .route-stop { margin-top: 10px; }
+        #route-distance { margin-top: 10px; font-size: 24px; }
+        h1 { font-size: 25px; }
+        #status { display: none; }
+        .toolbar { gap: 14px; bottom: 55px; padding-left: 14px; }
+        .help { font-size: 10px; }
+        footer { left: 16px; right: 16px; font-size: 9px; }
+        .desktop-help { display: none; }
+        #model-review { top: 16px; left: 16px; width: 240px; padding: 16px; max-height: 38vh; overflow-y: auto; }
+        #model-review h2 { font-size: 22px; }
+        #model-review .model-description { display: none; }
+        .toolbar { max-width: calc(100vw - 24px); flex-wrap: wrap; justify-content: center; white-space: normal; }
+        .toolbar .help { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="map" aria-label="Interactive three-dimensional map of UTAR Kampar"></main>
+    <header class="panel">
+      <div class="eyebrow">Campus Atlas / 04</div>
+      <h1>UTAR Kampar</h1>
+      <p class="subtitle">Explore the campus in three dimensions.</p>
+      <div class="divider"></div>
+      <div class="stats">
+        <div class="stat"><strong id="building-count">—</strong><span>buildings rendered</span></div>
+        <div class="stat"><strong id="path-count">—</strong><span>road & path ways</span></div>
+      </div>
+      <p id="data-note">Loading local OpenStreetMap geometry…</p>
+      <div class="divider"></div>
+      <div class="eyebrow">Walkway graph</div>
+      <div class="stats graph-stats">
+        <div class="stat"><strong id="node-count">—</strong><span>nodes</span></div>
+        <div class="stat"><strong id="edge-count">—</strong><span>undirected edges</span></div>
+      </div>
+      <p id="component-summary">Checking shared-node connectivity…</p>
+      <div id="graph-check" role="status"></div>
+      <p id="label-summary">Zoom in to see building names.</p>
+    </header>
+    <div class="panel" id="status" role="status">Loading campus</div>
+    <section class="panel" id="model-review" aria-label="Heritage Hall model inspection" hidden>
+      <div class="eyebrow">Architecture & Landscape / 03</div>
+      <div class="review-heading">
+        <h2>Heritage Hall</h2>
+        <button type="button" id="toggle-review" aria-expanded="true" aria-controls="model-review-details">Hide info</button>
+      </div>
+      <div id="model-review-details">
+        <p class="model-description">Explore Heritage Hall and its garden: tree-lined paths, the arrival road and the Confucius–Einstein sculpture.</p>
+        <div class="view-buttons" role="group" aria-label="Building views">
+          <button type="button" data-model-view="site" aria-pressed="false" disabled>Landscape</button>
+          <button type="button" data-model-view="arrival" aria-pressed="false" disabled>Arrival</button>
+          <button type="button" data-model-view="sculpture" aria-pressed="false" disabled>Sculpture</button>
+          <button type="button" data-model-view="elevated" aria-pressed="true">Perspective</button>
+          <button type="button" data-model-view="front" aria-pressed="false">Front</button>
+          <button type="button" data-model-view="side" aria-pressed="false">Side</button>
+          <button type="button" data-model-view="rear" aria-pressed="false">Rear</button>
+          <button type="button" data-model-view="entrance" aria-pressed="false">Entrance detail</button>
+          <button type="button" data-model-view="facade" aria-pressed="false">Façade detail</button>
+        </div>
+        <button type="button" id="rotate-model" aria-pressed="false">360° auto-rotate</button>
+        <button type="button" id="toggle-surroundings" aria-pressed="true" disabled>Hide surroundings</button>
+        <div class="divider"></div>
+        <p class="review-note"><strong>A photograph-guided reconstruction.</strong><br>Roads follow local map data. Planting, sculpture anatomy and some dimensions are approximate; rear elevations remain simplified.</p>
+        <a href="https://about.utar.edu.my/virtual-tour/utar-kampar-campus/" target="_blank" rel="noopener noreferrer">Open UTAR reference tour ↗</a>
+        <p class="review-note">Blender preview renders</p>
+        <div class="preview-links">
+          <a href="/previews/heritage-hall-site.png" target="_blank" rel="noopener">Landscape</a>
+          <a href="/previews/heritage-hall-arrival.png" target="_blank" rel="noopener">Arrival</a>
+          <a href="/previews/heritage-hall-sculpture.png" target="_blank" rel="noopener">Sculpture</a>
+          <a href="/previews/heritage-hall-front.png" target="_blank" rel="noopener">Front</a>
+          <a href="/previews/heritage-hall-rear.png" target="_blank" rel="noopener">Rear</a>
+          <a href="/previews/heritage-hall-side.png" target="_blank" rel="noopener">Side</a>
+          <a href="/previews/heritage-hall-elevated.png" target="_blank" rel="noopener">Elevated</a>
+          <a href="/previews/heritage-hall-entrance.png" target="_blank" rel="noopener">Entrance</a>
+          <a href="/previews/heritage-hall-facade.png" target="_blank" rel="noopener">Façade</a>
+        </div>
+        <div id="model-load-state" role="status">Loading local model…</div>
+      </div>
+    </section>
+    <section class="panel" id="wayfinding" aria-label="Campus wayfinding">
+      <div class="eyebrow">Find your way</div>
+      <div class="route-stop"><span>01 / ORIGIN</span><strong id="origin-name">Click a building</strong></div>
+      <div class="route-stop destination"><span>02 / DESTINATION</span><strong id="destination-name">Then click another</strong></div>
+      <div id="route-distance">—</div>
+      <div class="distance-caption">METRES ALONG THE PATH NETWORK</div>
+      <p id="route-message" role="status">Click a building to choose your origin.</p>
+      <p id="snap-note"></p>
+      <button id="clear-route" type="button" disabled>Clear route</button>
+    </section>
+    <div class="panel toolbar">
+      <div class="help"><b>Drag</b> orbit <span class="desktop-help">&nbsp; / &nbsp; <b>Right-drag</b> pan</span> &nbsp; / &nbsp; <b>Scroll / pinch</b> zoom</div>
+      <button id="reset" type="button">Reset view ↗</button>
+      <button id="inspect-heritage" type="button" disabled>Inspect Heritage Hall</button>
+      <button id="campus-overview" type="button">Campus overview</button>
+    </div>
+    <footer><span>LOCAL DATA · METRE-SCALE GEOMETRY</span><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a></footer>
+    <div class="panel" id="error" role="alert" hidden></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

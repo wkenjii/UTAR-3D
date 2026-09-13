@@ -1,0 +1,56 @@
+{
+  "osmWayId": 403039202,
+  "name": "Heritage Hall",
+  "stage": "exterior-and-landscape-review",
+  "origin": {
+    "x": 463.4791900432617,
+    "z": 368.4021849999749
+  },
+  "units": "metres",
+  "estimates": {
+    "rear_height": 10.5,
+    "middle_height": 11.3,
+    "front_wall_height": 12.6,
+    "canopy_eave_height": 15.0,
+    "canopy_crown_rise": 0.9,
+    "canopy_overhang": 2.4,
+    "canopy_thickness": 0.24,
+    "column_radius": 0.28,
+    "column_count": 11,
+    "entry_recess": 2.1,
+    "glazing_module_width": 1.45,
+    "cladding_panel_width": 2.8,
+    "cladding_panel_height": 1.25,
+    "clerestory_low": 12.6,
+    "clerestory_high": 14.1,
+    "entry_canopy_width": 10.0,
+    "entry_canopy_projection": 4.1,
+    "entry_canopy_height": 4.65
+  },
+  "referenceUrl": "https://about.utar.edu.my/virtual-tour/utar-kampar-campus/",
+  "notes": "Refined hall materials and photo-guided precinct. Rear elevations remain simplified. Sculpture is an interpreted model, not a scan.",
+  "meshCount": 66,
+  "site": {
+    "asset": "/models/heritage-hall-site.glb",
+    "treeCount": 81,
+    "roadWays": 20,
+    "pathWays": 21,
+    "sculpture": {
+      "x": -5.0,
+      "z": 83.0,
+      "height": 2.3
+    },
+    "bounds": {
+      "min": [
+        -147,
+        -0.1,
+        -96
+      ],
+      "max": [
+        132,
+        16,
+        151
+      ]
+    }
+  }
+}
